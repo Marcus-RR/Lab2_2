@@ -1,100 +1,97 @@
 #include "Cipher.h"
-using namespace std;
-Cipher::Cipher(const std::wstring& skey)
+Cipher::Cipher(int key)
 {
-    for (unsigned i=0; i<numAlpha.size(); i++) {
-        alphaNum[numAlpha[i]]=i;
-    }
-    key = convert(getValidKey(skey));
+    k=key;
 }
-
-std::wstring Cipher::encrypt(const std::wstring& open_text)
+wstring Cipher::zakodirovat(Cipher w, wstring& s)
 {
-    std::locale loc("ru_RU.UTF-8");
-    std::vector<int> work = convert(getValidOpenText(open_text));
-    for(unsigned i=0; i < work.size(); i++) {
-        work[i] = (work[i] + key[i % key.size()]) % alphaNum.size();
+    wstring code;
+    s=getValidOpenText(s);
+    w.k=getValidKey(w.k,s);
+    int h;
+    if (s.size()%w.k!=0) {
+        h=s.size()/w.k+1;
+    } else {
+        h=s.size()/w.k;
     }
-    return convert(work);
-}
-
-std::wstring Cipher::decrypt(const std::wstring& cipher_text)
-{
-    std::vector<int> work = convert(getValidCipherText(cipher_text));
-    for(unsigned i=0; i < work.size(); i++) {
-        work[i] = (work[i] + alphaNum.size() - key[i % key.size()]) % alphaNum.size();
-    }
-    return convert(work);
-}
-
-inline std::vector<int> Cipher::convert(const std::wstring& s)
-{
-    std::vector<int> result;
-    for(auto c:s) {
-        result.push_back(alphaNum[c]);
-    }
-    return result;
-}
-inline std::wstring Cipher::convert(const std::vector<int>& v)
-{
-    std::wstring result;
-    for(auto i:v) {
-        result.push_back(numAlpha[i]);
-    }
-    return result;
-}
-inline std::wstring Cipher::getValidKey(const std::wstring & in)
-{
-    if (in.empty()) throw cipher_error("Empty key");
-
-    wstring tmp;
-    std::locale loc("ru_RU.UTF-8");
-
-    for (wchar_t c : in) {
-        if (c >= L'А' && c <= L'Я') {
-            tmp += c;
-        } else if (c >= L'а' && c <= L'я') {
-            tmp += toupper(c, loc);
-        } else {
-            throw cipher_error("Invalid key");
+    wchar_t a[h][w.k];
+    int k=0;
+    for (int i=0; i<h; i++) {
+        for (int j=0; j<w.k; j++) {
+            if (k<s.size()) {
+                a[i][j]=s[k];
+                k++;
+            } else a[i][j]=' ';
         }
     }
-
+    for (int i=0; i<w.k; i++) {
+        for (int j=0; j<h; j++) {
+            code+=a[j][i];
+        }
+    }
+    return code;
+}
+wstring Cipher::raskodirovar(Cipher w, wstring& s)
+{
+    s=getValidOpenText(s);
+    w=getValidKey(w.k,s);
+    int h;
+    if (s.size()%w.k!=0) {
+        h=s.size()/w.k+1;
+    } else {
+        h=s.size()/w.k;
+    }
+    wchar_t a[h][w.k];
+    int k=0;
+    for (int i=0; i<w.k; i++) {
+        for (int j=0; j<h; j++) {
+            a[j][i]=s[k];
+            k++;
+        }
+    }
+    wstring decode;
+    for (int i=0; i<h; i++) {
+        for (int j=0; j<w.k; j++) {
+            decode+=a[i][j];
+        }
+    }
+    return decode;
+}
+inline int Cipher::getValidKey(const int k, const std::wstring & s)
+{
+    if (k<=0)
+        throw cipher_error("IVALID KEY");
+    else if (k>(s.size()/2))
+        throw cipher_error("THE KEY IS TOO LONG");
+    else
+        return k;
+}
+inline std::wstring Cipher::getValidOpenText(const std::wstring & s)
+{
+    std::wstring tmp;
+    for (auto c:s) {
+        if (isalpha(c)) {
+            if (islower(c))                {
+                tmp.push_back(toupper(c));
+            } else
+                tmp.push_back(c);
+        }
+    }
+    if (tmp.empty())
+        throw cipher_error("NO TEXT");
     return tmp;
 }
-inline std::wstring Cipher::getValidOpenText(const std::wstring & in)
+
+inline std::wstring Cipher::getValidCipherText(const std::wstring & s)
 {
-    if (in.empty()) throw cipher_error("Empty Open Text");
-
-    wstring tmp;
-    std::locale loc("ru_RU.UTF-8");
-
-    for (wchar_t c : in) {
-        if (c >= L'А' && c <= L'Я') {
-            tmp += c;
-        } else if (c >= L'а' && c <= L'я') {
-            tmp += toupper(c, loc);
-        } else {
-            throw cipher_error("Invalid Open Text");
+    std::wstring tmp;
+    for (auto c:s) {
+        if (isalpha(c)) {
+            if (islower(c)){
+                tmp.push_back(toupper(c));
+            } else
+                tmp.push_back(c);
         }
     }
-
-    return tmp;
-}
-inline std::wstring Cipher::getValidCipherText(const std::wstring & in)
-{
-    if (in.empty()) throw cipher_error("Empty Cipher Text");
-
-    wstring tmp;
-    std::locale loc("ru_RU.UTF-8");
-
-    for (wchar_t c : in) {
-        if (c >= L'А' && c <= L'Я') {
-            tmp += c;
-        } else {
-            throw cipher_error("Invalid Cipher Text");
-        }
-    }
-
     return tmp;
 }
