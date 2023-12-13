@@ -1,24 +1,20 @@
 #pragma once
-#include <vector>
 #include <string>
-#include <map>
-#include <locale>
+#include <vector>
+#include <iostream>
+using namespace std;
 class Cipher
 {
 private:
-    std::wstring numAlpha = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-    std::map <char,int> alphaNum;
-    std::vector <int> key;
-    std::vector<int> convert(const std::wstring& s);
-    std::wstring convert(const std::vector<int>& v);
-    std::wstring getValidKey(const std::wstring & s);
-    std::wstring getValidOpenText(const std::wstring & s);
-    std::wstring getValidCipherText(const std::wstring & s);
+    int k;
+    wstring getValidOpenText(const std::wstring & s);
+    wstring getValidCipherText(const std::wstring & s);
+    int getValidKey(const int k, const std::wstring & s);
 public:
     Cipher()=delete;
-    Cipher(const std::wstring& skey); 
-    std::wstring encrypt(const std::wstring& open_text); 
-    std::wstring decrypt(const std::wstring& cipher_text);
+    Cipher(int w);
+    wstring zakodirovat(Cipher w, wstring& s);
+    wstring raskodirovar(Cipher w, wstring& s);
 };
 class cipher_error: public std::invalid_argument
 {
